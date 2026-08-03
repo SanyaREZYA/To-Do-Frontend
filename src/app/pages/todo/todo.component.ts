@@ -267,10 +267,6 @@ export class TodoComponent implements OnInit {
     });
   }
 
-  deleteTask() {
-    this.taskService.
-  }
-
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('name');
