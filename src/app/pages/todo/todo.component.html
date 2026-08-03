@@ -1,0 +1,217 @@
+<div class="container-fluid min-vh-100 d-flex">
+  <div class="row flex-grow-1 justify-content-start py-3 gx-5">
+
+    <div class="col-2 d-flex">
+      <div class="card flex-grow-1">
+        <div class="card-body">
+          <div class="card">
+            <div class="card-body d-flex">
+              <img src="user.png" alt="User logo" width="50" height="50" class="rounded-circle">
+              <div class="d-flex flex-column">
+                <h5 class="card-title">{{ name }}</h5>
+                <p class="card-text">{{ email }}</p>
+              </div>
+            </div>
+          </div>
+          <button (click)="logout()" type="button" class="btn btn-primary w-100">Вийти</button>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Списки завдань</h5>
+              <div class="task-list-container">
+                @for (taskList of taskLists; track taskList.id) {
+                  <button (click)="onSelectTaskList(taskList)" type="button" class="btn w-100">
+                    {{ taskList.name }}
+                  </button>
+                }
+              </div>
+              @if (!isCreatingNewTaskList) {
+                <div class="">
+                  <button (click)="isCreatingNewTaskList = true" type="button" class="btn btn-primary w-100">Створити
+                    новий список
+                  </button>
+                </div>
+              }
+              @if (isCreatingNewTaskList) {
+                <div class="">
+                  <div class="form-floating mb-3">
+                    <input #newTaskListName type="text" class="form-control" id="newTaskListName"
+                           placeholder="Навчання" />
+                    <label for="newTaskListName">Назва нового списку </label>
+                  </div>
+                  <button type="button" (click)="createTaskList(newTaskListName.value)"
+                          class="btn btn-outline-primary w-100">Зберегти новий список
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-7 d-flex">
+      <div class="card flex-grow-1">
+        @if (selectedTaskList != null) {
+          <div class="card-header h-10 d-flex justify-content-between align-items-center">
+            <div>
+              @if (!isEditingTaskList) {
+                <h1>{{ selectedTaskList?.name }}</h1>
+              } @else {
+                <form [formGroup]="taskListNameEditForm" (ngSubmit)="updateTaskListName()"
+                      class="d-flex  justify-content-between align-items-center gap-2">
+                  <input type="text" class="form-control" placeholder="Нап. Навчання" formControlName="name" />
+                  <button type="submit" class="btn btn-primary w-100">Зберегти</button>
+                  <button type="button" class="btn-danger btn-close" (click)="onCLoseTaskListNameForm()"></button>
+                </form>
+              }
+            </div>
+            <div class="d-flex gap-3">
+              <button (click)="onEditTaskListName()" type="button" class="btn btn-outline-primary btn-icon"
+                      aria-label="Редагувати">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button (click)="onShowDeleteModal()" type="button" class="btn btn-outline-danger btn-icon"
+                      aria-label="Видалити">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        }
+        <div class="card-body">
+          @if (selectedTaskList != null) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <colgroup>
+                  <col style="width: 7%">
+                  <col style="width: 15%">
+                  <col style="width: 7%">
+                  <col style="width: 15%">
+                  <col style="width: 56%">
+                </colgroup>
+
+                <thead class="table-light">
+                <tr>
+                  <th></th>
+                  <th>Назва</th>
+                  <th>Термін</th>
+                  <th>Важливість</th>
+                  <th>Опис</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                  @for (task of pagedResponse?.items; track task.id) {
+                    <tr [ngClass]="task.isCompleted ? 'completed-task' : ''">
+                      <td class="text-center">
+                        <input class="form-check-input" (click)="onChangeIsCompleted(task.id)"
+                               [ngModel]="task.isCompleted" type="checkbox">
+                      </td>
+                      <td [ngClass]="!task.isCompleted ? 'fw-semibold' : ''">{{ task.title }}</td>
+                      <td class="text-secondary">{{ task.dueDate }}</td>
+                      <td class="text-center">
+                        <input [disabled]="task.isCompleted" class="form-check-input"
+                               (click)="onChangeIsImportant(task.id)" [ngModel]="task.isImportant" type="checkbox">
+                      </td>
+                      <td class="text-secondary text-truncate">{{ task.description }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="table-responsive">
+              @if (!isCreatingNewTask) {
+                <button (click)="onShowTaskCreateForm()" type="button" class="btn btn-primary">Додати нову задачу
+                </button>
+              } @else {
+                <form [formGroup]="taskCreateForm" (ngSubmit)="createTask()">
+                  <table class="table table-hover align-middle">
+                    <colgroup>
+                      <col style="width: 17%">
+                      <col style="width: 7%">
+                      <col style="width: 15%">
+                      <col style="width: 56%">
+                      <col style="width: 5%">
+                    </colgroup>
+                    <tbody>
+                    <tr>
+                      <td>
+                        <input type="text" class="form-control" id="taskTitle" placeholder="Назва задачі"
+                               formControlName="title">
+                      </td>
+                      <td>
+                        <input type="date" class="form-control" id="taskDueDate" placeholder="Термін"
+                               formControlName="dueDate">
+                      </td>
+                      <td class="text-center align-middle">
+                        <div class="d-flex flex-column align-items-center gap-2">
+                          <label for="taskIsImportant" class="form-label mb-0 small text-secondary fw-semibold">
+                            Важливість </label>
+                          <input class="form-check-input" type="checkbox" id="taskIsImportant"
+                                 formControlName="isImportant">
+                        </div>
+                      </td>
+                      <td>
+                        <input type="text" class="form-control" id="taskDescription" placeholder="Опис"
+                               formControlName="description">
+                      </td>
+                      <td class="text-center">
+                        <button type="submit" class="btn btn-success btn-sm" aria-label="Підтвердити">
+                          <i class="bi bi-check-lg"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </form>
+              }
+            </div>
+          }
+        </div>
+        <div class="card-footer d-flex gap-2">
+          @if (selectedTaskList != null) {
+            @for (i of taskPages; track i) {
+              <button (click)="loadTasksByPage(i + 1)" type="button" class="btn btn-outline-primary btn-icon"
+                      aria-label="Редагувати">
+                {{ i + 1 }}
+              </button>
+            }
+          }
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+@if (isDeleteModalOpen) {
+  <div class="modal fade show" tabindex="-1" style="display: block;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">
+            Видалити список? </h5>
+
+          <button type="button" class="btn-close" (click)="onCloseDeleteModal()"></button>
+        </div>
+
+        <div class="modal-body">
+          Ви впевнені, що хочете видалити список
+          <strong>{{ selectedTaskList?.name }}</strong>?
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="onCloseDeleteModal()">
+            Скасувати
+          </button>
+
+          <button type="button" class="btn btn-danger" (click)="deleteTaskList()">
+            Видалити
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop fade show"></div>
+}

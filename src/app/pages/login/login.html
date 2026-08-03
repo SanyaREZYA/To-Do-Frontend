@@ -1,6 +1,7 @@
 <div class="container min-vh-100 d-flex justify-content-center align-items-center">
   <div class="card shadow" style="width: 400px">
-    <div class="card-body"><h1 class="text-primary text-center mb-4">Вхід</h1>
+    <div class="card-body">
+      <h1 class="text-primary text-center mb-4">Вхід</h1>
       @if (errorMessage) {
         <div class="alert alert-danger" role="alert">
           {{ errorMessage }}
@@ -10,7 +11,8 @@
         <div class="form-floating mb-3">
           <input type="email" class="form-control" id="email" placeholder="name@example.com" formControlName="email"
                  [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" />
-          <label for="email">Email </label></div>
+          <label for="email">Email </label>
+        </div>
         <div class="form-floating mb-3">
           <input type="password" class="form-control" id="password" placeholder="Ваш пароль" formControlName="password"
                  [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" />

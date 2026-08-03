@@ -37,6 +37,8 @@ export class Login {
     this.authService.login(loginDto).subscribe({
       next: (response) => {
         localStorage.setItem('token', response.token);
+        localStorage.setItem('name', response.name);
+        localStorage.setItem('email', response.email);
         this.router.navigate(['/todo']);
       },
       error: (error) => {

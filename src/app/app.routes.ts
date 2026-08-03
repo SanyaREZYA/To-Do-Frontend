@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { Login } from './pages/login/login';
-import { Todo } from './pages/todo/todo';
+import { TodoComponent } from './pages/todo/todo.component';
 import { Register } from './pages/register/register';
 
 export const routes: Routes = [
@@ -14,7 +14,7 @@ export const routes: Routes = [
   },
   {
     path: 'todo',
-    component: Todo,
+    component: TodoComponent,
   },
   {
     path: '',

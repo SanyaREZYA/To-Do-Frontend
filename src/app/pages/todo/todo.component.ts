@@ -1,0 +1,277 @@
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { TaskListService } from '../../services/task-list.service';
+import { TaskList } from '../../models/TaskList';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { TaskItem } from '../../models/TaskItem';
+import { PagedResponseDto } from '../../models/dtos/paged-response.dto';
+import { GetTasksQueryDto } from '../../models/dtos/get-tasks-query.dto';
+import { TaskService } from '../../services/task.service';
+import { CreateTaskDto } from '../../models/dtos/create-task.dto';
+import { NgClass } from '@angular/common';
+import { TaskListDto } from '../../models/dtos/task-list.dto';
+
+@Component({
+  selector: 'app-todo',
+  imports: [ReactiveFormsModule, FormsModule, NgClass],
+  templateUrl: './todo.component.html',
+  styleUrl: './todo.component.css',
+})
+export class TodoComponent implements OnInit {
+  name = localStorage.getItem('name');
+  email = localStorage.getItem('email');
+  taskLists: TaskList[] = [];
+  isCreatingNewTaskList = false;
+  isCreatingNewTask = false;
+  selectedTaskList: TaskList | null = null;
+  pagedResponse?: PagedResponseDto<TaskItem>;
+  taskPages: number[] = [];
+  currentTaskPage: number = 1;
+  isDeleteModalOpen: boolean = false;
+  isEditingTaskList: boolean = false;
+
+  constructor(
+    private taskListService: TaskListService,
+    private taskService: TaskService,
+    private cdr: ChangeDetectorRef,
+    private router: Router,
+  ) {}
+
+  taskCreateForm = new FormGroup({
+    title: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    description: new FormControl(''),
+    dueDate: new FormControl('', {
+      nonNullable: true,
+    }),
+    isImportant: new FormControl(false, {
+      nonNullable: true,
+    }),
+  });
+
+  taskListNameEditForm = new FormGroup({
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+  });
+
+  ngOnInit() {
+    this.getAllTaskListByUser();
+  }
+
+  getAllTaskListByUser() {
+    this.taskListService.getAllTaskListByUser().subscribe({
+      next: (response) => {
+        this.taskLists = response;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Помилка отримання списків:', error);
+      },
+    });
+  }
+
+  createTaskList(name: string) {
+    if (!name.trim()) {
+      return;
+    }
+    this.taskListService.createTaskList(name).subscribe({
+      next: (createdTaskList) => {
+        this.taskLists = [...this.taskLists, createdTaskList];
+        this.selectedTaskList = createdTaskList;
+        this.isCreatingNewTaskList = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  getPagedResponse(getTasksQueryDto: GetTasksQueryDto) {
+    this.taskService.getPagedResponse(getTasksQueryDto).subscribe({
+      next: (pagedResponse) => {
+        this.pagedResponse = pagedResponse;
+        this.taskPages = Array.from({ length: this.pagedResponse?.totalPages ?? 0 }, (_, i) => i);
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  onSelectTaskList(taskList: TaskList) {
+    this.selectedTaskList = taskList;
+    const getTasksQueryDto: GetTasksQueryDto = {
+      taskListId: taskList.id,
+      page: 1,
+      pageSize: 10,
+      sortBy: 'title',
+      sortDirection: 'asc',
+    };
+    this.getPagedResponse(getTasksQueryDto);
+  }
+
+  loadTasksByPage(selectedPage: number) {
+    if (!this.selectedTaskList) {
+      return;
+    }
+
+    this.currentTaskPage = selectedPage;
+    const getTasksQueryDto: GetTasksQueryDto = {
+      taskListId: this.selectedTaskList.id,
+      page: this.currentTaskPage,
+      pageSize: 10,
+      sortBy: 'title',
+      sortDirection: 'asc',
+    };
+    this.getPagedResponse(getTasksQueryDto);
+  }
+
+  onChangeIsImportant(taskId: number) {
+    this.taskService.changeIsImportant(taskId).subscribe({
+      next: (task) => {
+        if (this.pagedResponse) {
+          this.pagedResponse.items = this.pagedResponse.items.map((t) =>
+            t.id === task.id ? task : t,
+          );
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  onChangeIsCompleted(taskId: number) {
+    this.taskService.changeIsCompleted(taskId).subscribe({
+      next: (task) => {
+        if (this.pagedResponse) {
+          this.pagedResponse.items = this.pagedResponse.items.map((t) =>
+            t.id === task.id ? task : t,
+          );
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  createTask() {
+    if (this.taskCreateForm.invalid || !this.selectedTaskList) {
+      return;
+    }
+
+    const formData = this.taskCreateForm.getRawValue();
+    const createTaskDto: CreateTaskDto = {
+      taskListId: this.selectedTaskList?.id,
+      title: formData.title,
+      description: formData.description || null,
+      dueDate: formData.dueDate.toString() || null,
+      isImportant: formData.isImportant,
+    };
+
+    this.taskService.createTask(createTaskDto).subscribe({
+      next: () => {
+        this.taskCreateForm.reset({
+          title: '',
+          description: '',
+          dueDate: '',
+          isImportant: false,
+        });
+
+        this.isCreatingNewTask = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  onShowTaskCreateForm() {
+    this.isCreatingNewTask = true;
+    this.cdr.detectChanges();
+  }
+
+  onShowDeleteModal() {
+    this.isDeleteModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  onCloseDeleteModal() {
+    this.isDeleteModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  deleteTaskList() {
+    if (!this.selectedTaskList) {
+      return;
+    }
+    const taskListId = this.selectedTaskList.id;
+    this.taskListService.deleteTaskList(taskListId).subscribe({
+      next: () => {
+        this.taskLists = this.taskLists.filter((taskList) => taskList.id !== taskListId);
+        this.isDeleteModalOpen = false;
+        this.selectedTaskList = this.taskLists[0] || null;
+        this.onSelectTaskList(this.selectedTaskList);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  onEditTaskListName() {
+    this.isEditingTaskList = true;
+    this.cdr.detectChanges();
+  }
+
+  onCLoseTaskListNameForm() {
+    this.isEditingTaskList = false;
+    this.cdr.detectChanges();
+  }
+
+  updateTaskListName() {
+    if (!this.selectedTaskList) {
+      return;
+    }
+    const taskListId = this.selectedTaskList.id;
+    const taskListDto: TaskListDto = this.taskListNameEditForm.getRawValue();
+    this.taskListService.updateTaskList(taskListId, taskListDto).subscribe({
+      next: (updatedTaskList) => {
+        this.taskLists = this.taskLists.map((taskList) =>
+          taskList.id === taskListId ? updatedTaskList : taskList,
+        );
+        this.selectedTaskList = updatedTaskList;
+        this.isEditingTaskList = false;
+        this.taskListNameEditForm.reset({
+          name: '',
+        });
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('name');
+    localStorage.removeItem('email');
+
+    this.router.navigate(['/login']);
+  }
+}

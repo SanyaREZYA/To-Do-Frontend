@@ -1,0 +1,27 @@
+.task-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.h-10 {
+  height: 10%;
+}
+
+.completed-task {
+  color: gray;
+  text-decoration: line-through;
+  font-style: italic;
+}
