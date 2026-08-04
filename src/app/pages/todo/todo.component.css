@@ -1,8 +1,8 @@
-.task-list-container {
+.item-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-height: 60vh;
+  max-height: 68vh;
   overflow-y: auto;
 }
 

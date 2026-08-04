@@ -5,6 +5,7 @@ import { TaskItem } from '../models/TaskItem';
 import { CreateTaskDto } from '../models/dtos/create-task.dto';
 import { GetTasksQueryDto } from '../models/dtos/get-tasks-query.dto';
 import { PagedResponseDto } from '../models/dtos/paged-response.dto';
+import { UpdateTaskDto } from '../models/dtos/update-task.dto';
 
 @Injectable({
   providedIn: 'root',
@@ -40,5 +41,13 @@ export class TaskService {
 
   changeIsCompleted(taskId: number): Observable<TaskItem> {
     return this.http.patch<TaskItem>(`${this.apiUrl}/completed`, taskId);
+  }
+
+  updateTask(taskId: number, updateTaskDto: UpdateTaskDto) {
+    return this.http.patch<TaskItem>(`${this.apiUrl}/${taskId}`, updateTaskDto);
+  }
+
+  deleteTask(taskId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${taskId}`);
   }
 }

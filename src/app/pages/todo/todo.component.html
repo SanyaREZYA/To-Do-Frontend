@@ -17,7 +17,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Списки завдань</h5>
-              <div class="task-list-container">
+              <div class="item-container">
                 @for (taskList of taskLists; track taskList.id) {
                   <button (click)="onSelectTaskList(taskList)" type="button" class="btn w-100">
                     {{ taskList.name }}
@@ -25,8 +25,8 @@
                 }
               </div>
               @if (!isCreatingNewTaskList) {
-                <div class="">
-                  <button (click)="isCreatingNewTaskList = true" type="button" class="btn btn-primary w-100">Створити
+                <div class="d-flex ">
+                  <button (click)="onCreateTaskList()" type="button" class="btn btn-primary w-100">Створити
                     новий список
                   </button>
                 </div>
@@ -38,9 +38,13 @@
                            placeholder="Навчання" />
                     <label for="newTaskListName">Назва нового списку </label>
                   </div>
-                  <button type="button" (click)="createTaskList(newTaskListName.value)"
-                          class="btn btn-outline-primary w-100">Зберегти новий список
-                  </button>
+                  <div class="d-flex justify-content-center align-items-center gap-2">
+                    <button type="button" (click)="createTaskList(newTaskListName.value)"
+                            class="btn btn-outline-primary w-100">Зберегти новий список
+                    </button>
+                    <button (click)="onCloseCreateTaskList()" type="button" class="btn btn-outline-danger btn-close">`
+                    </button>
+                  </div>
                 </div>
               }
             </div>
@@ -70,7 +74,7 @@
                       aria-label="Редагувати">
                 <i class="bi bi-pencil"></i>
               </button>
-              <button (click)="onShowDeleteModal()" type="button" class="btn btn-outline-danger btn-icon"
+              <button (click)="onShowDeleteTaskListModal()" type="button" class="btn btn-outline-danger btn-icon"
                       aria-label="Видалити">
                 <i class="bi bi-trash"></i>
               </button>
@@ -79,14 +83,16 @@
         }
         <div class="card-body">
           @if (selectedTaskList != null) {
-            <div class="table-responsive">
+            <div class="table-responsive item-container">
               <table class="table table-hover align-middle">
                 <colgroup>
                   <col style="width: 7%">
-                  <col style="width: 15%">
+                  <col style="width: 12%">
                   <col style="width: 7%">
-                  <col style="width: 15%">
-                  <col style="width: 56%">
+                  <col style="width: 12%">
+                  <col style="width: 50%">
+                  <col style="width: 5%">
+                  <col style="width: 5%">
                 </colgroup>
 
                 <thead class="table-light">
@@ -96,6 +102,8 @@
                   <th>Термін</th>
                   <th>Важливість</th>
                   <th>Опис</th>
+                  <th></th>
+                  <th></th>
                 </tr>
                 </thead>
 
@@ -113,6 +121,18 @@
                                (click)="onChangeIsImportant(task.id)" [ngModel]="task.isImportant" type="checkbox">
                       </td>
                       <td class="text-secondary text-truncate">{{ task.description }}</td>
+                      <td>
+                        <button (click)="onEditTaskListName()" type="button" class="btn btn-outline-primary btn-icon"
+                                aria-label="Редагувати">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                      </td>
+                      <td>
+                        <button (click)="onShowDeleteTaskModal(task.title, task.id)" type="button"
+                                class="btn btn-outline-danger btn-icon">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -183,35 +203,6 @@
   </div>
 </div>
 @if (isDeleteModalOpen) {
-  <div class="modal fade show" tabindex="-1" style="display: block;">
-    <div class="modal-dialog">
-      <div class="modal-content">
-
-        <div class="modal-header">
-          <h5 class="modal-title">
-            Видалити список? </h5>
-
-          <button type="button" class="btn-close" (click)="onCloseDeleteModal()"></button>
-        </div>
-
-        <div class="modal-body">
-          Ви впевнені, що хочете видалити список
-          <strong>{{ selectedTaskList?.name }}</strong>?
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="onCloseDeleteModal()">
-            Скасувати
-          </button>
-
-          <button type="button" class="btn btn-danger" (click)="deleteTaskList()">
-            Видалити
-          </button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-backdrop fade show"></div>
+  <app-delete-item-modal [itemName]="deletedItemName" [isTaskListDeleting]="isTaskListDeleting" (confirm)="deleteItem()"
+                         (close)="onCloseDeleteModal()" (cancel)="isTaskListDeleting = false"></app-delete-item-modal>
 }

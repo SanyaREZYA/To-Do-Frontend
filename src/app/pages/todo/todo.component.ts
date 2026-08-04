@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, output } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TaskListService } from '../../services/task-list.service';
 import { TaskList } from '../../models/TaskList';
@@ -16,10 +16,11 @@ import { TaskService } from '../../services/task.service';
 import { CreateTaskDto } from '../../models/dtos/create-task.dto';
 import { NgClass } from '@angular/common';
 import { TaskListDto } from '../../models/dtos/task-list.dto';
+import { DeleteItemModalComponent } from './delete-item-modal/delete-item-modal.component';
 
 @Component({
   selector: 'app-todo',
-  imports: [ReactiveFormsModule, FormsModule, NgClass],
+  imports: [ReactiveFormsModule, FormsModule, NgClass, DeleteItemModalComponent],
   templateUrl: './todo.component.html',
   styleUrl: './todo.component.css',
 })
@@ -34,7 +35,12 @@ export class TodoComponent implements OnInit {
   taskPages: number[] = [];
   currentTaskPage: number = 1;
   isDeleteModalOpen: boolean = false;
+  isEditModalOpen: boolean = false;
   isEditingTaskList: boolean = false;
+  isEditingTask: boolean = false;
+  isTaskListDeleting: boolean = false;
+  deletedItemName: string = '';
+  deletedTaskId: number | null = null;
 
   constructor(
     private taskListService: TaskListService,
@@ -95,6 +101,16 @@ export class TodoComponent implements OnInit {
         console.error(error);
       },
     });
+  }
+
+  onCreateTaskList() {
+    this.isCreatingNewTaskList = true;
+    this.cdr.detectChanges();
+  }
+
+  onCloseCreateTaskList() {
+    this.isCreatingNewTaskList = false;
+    this.cdr.detectChanges();
   }
 
   getPagedResponse(getTasksQueryDto: GetTasksQueryDto) {
@@ -189,8 +205,11 @@ export class TodoComponent implements OnInit {
           dueDate: '',
           isImportant: false,
         });
-
+        if (this.selectedTaskList == null) {
+          return;
+        }
         this.isCreatingNewTask = false;
+        this.onSelectTaskList(this.selectedTaskList);
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -207,30 +226,6 @@ export class TodoComponent implements OnInit {
   onShowDeleteModal() {
     this.isDeleteModalOpen = true;
     this.cdr.detectChanges();
-  }
-
-  onCloseDeleteModal() {
-    this.isDeleteModalOpen = false;
-    this.cdr.detectChanges();
-  }
-
-  deleteTaskList() {
-    if (!this.selectedTaskList) {
-      return;
-    }
-    const taskListId = this.selectedTaskList.id;
-    this.taskListService.deleteTaskList(taskListId).subscribe({
-      next: () => {
-        this.taskLists = this.taskLists.filter((taskList) => taskList.id !== taskListId);
-        this.isDeleteModalOpen = false;
-        this.selectedTaskList = this.taskLists[0] || null;
-        this.onSelectTaskList(this.selectedTaskList);
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error(error);
-      },
-    });
   }
 
   onEditTaskListName() {
@@ -267,6 +262,77 @@ export class TodoComponent implements OnInit {
     });
   }
 
+  onShowDeleteTaskModal(taskTitle: string, taskId?: number) {
+    this.deletedItemName = taskTitle;
+    if (taskId) {
+      this.deletedTaskId = taskId;
+    }
+    this.isDeleteModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  onShowDeleteTaskListModal() {
+    if (!this.selectedTaskList) {
+      return;
+    }
+    this.isTaskListDeleting = true;
+    this.deletedItemName = this.selectedTaskList.name;
+    this.isDeleteModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  deleteTaskList() {
+    if (!this.selectedTaskList) {
+      return;
+    }
+    const taskListId = this.selectedTaskList.id;
+    this.taskListService.deleteTaskList(taskListId).subscribe({
+      next: () => {
+        this.taskLists = this.taskLists.filter((taskList) => taskList.id !== taskListId);
+        this.isDeleteModalOpen = false;
+        this.selectedTaskList = this.taskLists[0] || null;
+        this.onSelectTaskList(this.selectedTaskList);
+        this.isTaskListDeleting = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  deleteTask(taskId: number) {
+    this.taskService.deleteTask(taskId).subscribe({
+      next: () => {
+        if (this.selectedTaskList == null) {
+          return;
+        }
+        this.isDeleteModalOpen = false;
+        this.onSelectTaskList(this.selectedTaskList);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
+
+  deleteItem() {
+    if (this.isTaskListDeleting) {
+      this.deleteTaskList();
+    } else if (this.deletedTaskId) {
+      this.deleteTask(this.deletedTaskId);
+    }
+  }
+
+  updateTask() {}
+
+  onCloseDeleteModal() {
+    this.isDeleteModalOpen = false;
+    this.isTaskListDeleting = false;
+    this.cdr.detectChanges();
+  }
+
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('name');
@@ -274,4 +340,6 @@ export class TodoComponent implements OnInit {
 
     this.router.navigate(['/login']);
   }
+
+  protected readonly close = close;
 }
