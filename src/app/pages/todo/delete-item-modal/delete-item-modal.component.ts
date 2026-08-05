@@ -9,7 +9,6 @@ import { Component, input, output } from '@angular/core';
 export class DeleteItemModalComponent {
   confirm = output<void>();
   close = output<void>();
-  cancel = output<void>();
   itemName = input.required<string>();
   isTaskListDeleting = input.required<boolean>();
 

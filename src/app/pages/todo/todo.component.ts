@@ -17,10 +17,18 @@ import { CreateTaskDto } from '../../models/dtos/create-task.dto';
 import { NgClass } from '@angular/common';
 import { TaskListDto } from '../../models/dtos/task-list.dto';
 import { DeleteItemModalComponent } from './delete-item-modal/delete-item-modal.component';
+import { EditTaskModalComponent } from './edit-task-modal/edit-task-modal.component';
+import { UpdateTaskDto } from '../../models/dtos/update-task.dto';
 
 @Component({
   selector: 'app-todo',
-  imports: [ReactiveFormsModule, FormsModule, NgClass, DeleteItemModalComponent],
+  imports: [
+    ReactiveFormsModule,
+    FormsModule,
+    NgClass,
+    DeleteItemModalComponent,
+    EditTaskModalComponent,
+  ],
   templateUrl: './todo.component.html',
   styleUrl: './todo.component.css',
 })
@@ -41,6 +49,7 @@ export class TodoComponent implements OnInit {
   isTaskListDeleting: boolean = false;
   deletedItemName: string = '';
   deletedTaskId: number | null = null;
+  editedTask: TaskItem | null = null;
 
   constructor(
     private taskListService: TaskListService,
@@ -281,6 +290,12 @@ export class TodoComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  onShowEditTaskModal(task: TaskItem) {
+    this.editedTask = task;
+    this.isEditModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
   deleteTaskList() {
     if (!this.selectedTaskList) {
       return;
@@ -325,11 +340,34 @@ export class TodoComponent implements OnInit {
     }
   }
 
-  updateTask() {}
+  updateTask(updateTaskDto: UpdateTaskDto) {
+    if (!this.editedTask) {
+      return;
+    }
+    this.taskService.updateTask(this.editedTask.id, updateTaskDto).subscribe({
+      next: (updatedTask) => {
+        if (this.pagedResponse) {
+          this.pagedResponse.items = this.pagedResponse.items.map((task) =>
+            task.id === updatedTask.id ? updatedTask : task,
+          );
+        }
+        this.isEditModalOpen = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(error);
+      },
+    });
+  }
 
   onCloseDeleteModal() {
     this.isDeleteModalOpen = false;
     this.isTaskListDeleting = false;
+    this.cdr.detectChanges();
+  }
+
+  onCloseEditModal() {
+    this.isEditModalOpen = false;
     this.cdr.detectChanges();
   }
 
@@ -340,6 +378,4 @@ export class TodoComponent implements OnInit {
 
     this.router.navigate(['/login']);
   }
-
-  protected readonly close = close;
 }

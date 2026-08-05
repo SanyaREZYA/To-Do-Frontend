@@ -44,7 +44,7 @@ export class TaskService {
   }
 
   updateTask(taskId: number, updateTaskDto: UpdateTaskDto) {
-    return this.http.patch<TaskItem>(`${this.apiUrl}/${taskId}`, updateTaskDto);
+    return this.http.put<TaskItem>(`${this.apiUrl}/${taskId}`, updateTaskDto);
   }
 
   deleteTask(taskId: number): Observable<void> {

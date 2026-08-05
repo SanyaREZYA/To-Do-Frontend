@@ -122,7 +122,8 @@
                       </td>
                       <td class="text-secondary text-truncate">{{ task.description }}</td>
                       <td>
-                        <button type="button" class="btn btn-outline-primary btn-icon" aria-label="Редагувати">
+                        <button (click)="onShowEditTaskModal(task)" type="button"
+                                class="btn btn-outline-primary btn-icon" aria-label="Редагувати">
                           <i class="bi bi-pencil"></i>
                         </button>
                       </td>
@@ -203,5 +204,9 @@
 </div>
 @if (isDeleteModalOpen) {
   <app-delete-item-modal [itemName]="deletedItemName" [isTaskListDeleting]="isTaskListDeleting" (confirm)="deleteItem()"
-                         (close)="onCloseDeleteModal()" (cancel)="isTaskListDeleting = false"></app-delete-item-modal>
+                         (close)="onCloseDeleteModal()"></app-delete-item-modal>
+}
+@if (isEditModalOpen && editedTask) {
+  <app-edit-task-modal [task]="editedTask" (close)="onCloseEditModal()"
+                       (taskDto)="updateTask($event)"></app-edit-task-modal>
 }
