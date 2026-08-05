@@ -31,6 +31,7 @@ export class TaskService {
         pageSize: query.pageSize,
         sortBy: query.sortBy,
         sortDirection: query.sortDirection,
+        search: query.search ?? '',
       },
     });
   }

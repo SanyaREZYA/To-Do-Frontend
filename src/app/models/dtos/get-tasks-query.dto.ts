@@ -4,4 +4,5 @@ export interface GetTasksQueryDto {
   pageSize: number;
   sortBy: string;
   sortDirection: string;
+  search?: string;
 }

@@ -51,6 +51,7 @@ export class TodoComponent implements OnInit {
   editedTask: TaskItem | null = null;
   sortBy: string = 'title';
   sortDirection: 'asc' | 'desc' = 'asc';
+  searchTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     private taskListService: TaskListService,
@@ -155,13 +156,14 @@ export class TodoComponent implements OnInit {
     this.getPagedResponse(getTasksQueryDto);
   }
 
-  formGetTaskQueryDto(page: number, taskListId: number) {
+  formGetTaskQueryDto(page: number, taskListId: number, search?: string) {
     return {
       taskListId: taskListId,
       page: page,
       pageSize: 10,
       sortBy: this.sortBy,
       sortDirection: this.sortDirection,
+      search: search,
     };
   }
 
@@ -384,6 +386,29 @@ export class TodoComponent implements OnInit {
       return;
     }
     this.onSelectTaskList(this.selectedTaskList);
+  }
+
+  onSearchInput(search: string) {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    this.searchTimeout = setTimeout(() => {
+      this.loadTasksBySearch(search);
+    }, 700);
+  }
+
+  loadTasksBySearch(search: string) {
+    if (!this.selectedTaskList) {
+      return;
+    }
+    this.currentTaskPage = 1;
+    const getTasksQueryDto: GetTasksQueryDto = this.formGetTaskQueryDto(
+      this.currentTaskPage,
+      this.selectedTaskList.id,
+      search,
+    );
+    this.getPagedResponse(getTasksQueryDto);
   }
 
   logout() {
