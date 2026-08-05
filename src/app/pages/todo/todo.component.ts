@@ -45,11 +45,12 @@ export class TodoComponent implements OnInit {
   isDeleteModalOpen: boolean = false;
   isEditModalOpen: boolean = false;
   isEditingTaskList: boolean = false;
-  isEditingTask: boolean = false;
   isTaskListDeleting: boolean = false;
   deletedItemName: string = '';
   deletedTaskId: number | null = null;
   editedTask: TaskItem | null = null;
+  sortBy: string = 'title';
+  sortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(
     private taskListService: TaskListService,
@@ -134,13 +135,10 @@ export class TodoComponent implements OnInit {
 
   onSelectTaskList(taskList: TaskList) {
     this.selectedTaskList = taskList;
-    const getTasksQueryDto: GetTasksQueryDto = {
-      taskListId: taskList.id,
-      page: 1,
-      pageSize: 10,
-      sortBy: 'title',
-      sortDirection: 'asc',
-    };
+    const getTasksQueryDto: GetTasksQueryDto = this.formGetTaskQueryDto(
+      1,
+      this.selectedTaskList.id,
+    );
     this.getPagedResponse(getTasksQueryDto);
   }
 
@@ -150,14 +148,21 @@ export class TodoComponent implements OnInit {
     }
 
     this.currentTaskPage = selectedPage;
-    const getTasksQueryDto: GetTasksQueryDto = {
-      taskListId: this.selectedTaskList.id,
-      page: this.currentTaskPage,
-      pageSize: 10,
-      sortBy: 'title',
-      sortDirection: 'asc',
-    };
+    const getTasksQueryDto: GetTasksQueryDto = this.formGetTaskQueryDto(
+      selectedPage,
+      this.selectedTaskList.id,
+    );
     this.getPagedResponse(getTasksQueryDto);
+  }
+
+  formGetTaskQueryDto(page: number, taskListId: number) {
+    return {
+      taskListId: taskListId,
+      page: page,
+      pageSize: 10,
+      sortBy: this.sortBy,
+      sortDirection: this.sortDirection,
+    };
   }
 
   onChangeIsImportant(taskId: number) {
@@ -229,11 +234,6 @@ export class TodoComponent implements OnInit {
 
   onShowTaskCreateForm() {
     this.isCreatingNewTask = true;
-    this.cdr.detectChanges();
-  }
-
-  onShowDeleteModal() {
-    this.isDeleteModalOpen = true;
     this.cdr.detectChanges();
   }
 
@@ -369,6 +369,21 @@ export class TodoComponent implements OnInit {
   onCloseEditModal() {
     this.isEditModalOpen = false;
     this.cdr.detectChanges();
+  }
+
+  onSortChange() {
+    if (!this.selectedTaskList) {
+      return;
+    }
+    this.onSelectTaskList(this.selectedTaskList);
+  }
+
+  toggleSortDirection(): void {
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    if (!this.selectedTaskList) {
+      return;
+    }
+    this.onSelectTaskList(this.selectedTaskList);
   }
 
   logout() {

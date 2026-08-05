@@ -83,6 +83,25 @@
         }
         <div class="card-body">
           @if (selectedTaskList != null) {
+            <div class="d-flex justify-content-end align-content-center gap-2">
+              <div class="d-flex align-items-center gap-2">
+                <label for="sortBy" class="form-label mb-0 fw-semibold text-secondary">
+                  Сортувати за:
+                </label>
+                <select id="sortBy" class="form-select" style="width: 200px" [(ngModel)]="sortBy"
+                        (change)="onSortChange()">
+                  <option value="title">Назвою</option>
+                  <option value="dueDate">Терміном виконання</option>
+                </select>
+              </div>
+              <button type="button"
+                      class="btn btn-light border rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2"
+                      (click)="toggleSortDirection()">
+                <i class="bi" [class.bi-sort-down]="sortDirection === 'desc'"
+                   [class.bi-sort-up]="sortDirection === 'asc'"></i>
+                <span> {{ sortDirection === 'asc' ? 'За зростанням' : 'За спаданням' }} </span>
+              </button>
+            </div>
             <div class="table-responsive item-container">
               <table class="table table-hover align-middle">
                 <colgroup>
