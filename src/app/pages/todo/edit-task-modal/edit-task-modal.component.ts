@@ -12,7 +12,7 @@ import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-edit-task-modal',
-  imports: [ReactiveFormsModule, FormsModule, NgClass],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './edit-task-modal.component.html',
   styleUrl: './edit-task-modal.component.css',
 })

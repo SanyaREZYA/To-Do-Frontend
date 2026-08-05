@@ -240,6 +240,9 @@ export class TodoComponent implements OnInit {
   }
 
   onEditTaskListName() {
+    this.taskListNameEditForm.patchValue({
+      name: this.selectedTaskList?.name,
+    });
     this.isEditingTaskList = true;
     this.cdr.detectChanges();
   }
